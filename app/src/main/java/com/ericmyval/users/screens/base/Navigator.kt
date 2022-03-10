@@ -1,4 +1,4 @@
-package com.ericmyval.users
+package com.ericmyval.users.screens.base
 
 import com.ericmyval.users.model.User
 
