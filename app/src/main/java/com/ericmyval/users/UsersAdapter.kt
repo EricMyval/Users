@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.ericmyval.users.databinding.ItemUserBinding
 import com.ericmyval.users.model.User
+import com.ericmyval.users.screens.users.UserListItem
 
 // Лучше юзать интерфейс, т.к. дайствий будет несколько
 interface UserActionListener {
@@ -29,7 +30,7 @@ class UsersAdapter(
         private const val ID_REMOVE = 3
     }
 
-    var users: List<User> = emptyList()
+    var users: List<UserListItem> = emptyList()
         set(value) {
             field = value
             notifyDataSetChanged()
@@ -46,11 +47,22 @@ class UsersAdapter(
     }
 
     override fun onBindViewHolder(holder: UsersViewHolder, position: Int) {
-        val user = users[position]
+        val userListItem = users[position]
+        val user = userListItem.user
+
         with(holder.binding) {
-            // Ссылка на юзера
             holder.itemView.tag = user
             moreImageViewButton.tag = user
+
+            if (userListItem.isInProgress) {
+                moreImageViewButton.visibility = View.INVISIBLE
+                itemProgressBar.visibility = View.VISIBLE
+                holder.binding.root.setOnClickListener(null)
+            } else {
+                moreImageViewButton.visibility = View.VISIBLE
+                itemProgressBar.visibility = View.GONE
+                holder.binding.root.setOnClickListener(this@UsersAdapter)
+            }
 
             userNameTextView.text = user.name
             userCompanyTextView.text = user.company
@@ -64,6 +76,10 @@ class UsersAdapter(
             } else {
                 Glide.with(photoImageView.context).clear(photoImageView)
                 photoImageView.setImageResource(R.drawable.ic_user_avatar)
+                // you can also use the following code instead of these two lines ^
+                // Glide.with(photoImageView.context)
+                //        .load(R.drawable.ic_user_avatar)
+                //        .into(photoImageView)
             }
         }
     }
@@ -86,7 +102,7 @@ class UsersAdapter(
         val popupMenu = PopupMenu(view.context, view)
         val context = view.context
         val user = view.tag as User
-        val position = users.indexOfFirst { it.id == user.id }
+        val position = users.indexOfFirst { it.user.id == user.id }
         // Доступность кнопок
         popupMenu.menu.add(0, ID_MOVE_UP, Menu.NONE, context.getString(R.string.move_up)).apply {
             isEnabled = position > 0
