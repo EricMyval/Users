@@ -10,8 +10,8 @@ import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.ericmyval.users.R
-import com.ericmyval.users.UsersAdapter
 import com.ericmyval.users.databinding.FragmentUsersListBinding
+import com.ericmyval.users.screens.base.BaseFragment
 import com.ericmyval.users.screens.base.factory
 import com.ericmyval.users.screens.details.UserDetailsFragment
 
@@ -20,8 +20,8 @@ import com.ericmyval.users.tasks.ErrorResult
 import com.ericmyval.users.tasks.PendingResult
 import com.ericmyval.users.tasks.SuccessResult
 
-class UsersListFragment: Fragment(R.layout.fragment_users_list) {
-    private val viewModel: UsersListViewModel by viewModels { factory() }
+class UsersListFragment: BaseFragment(R.layout.fragment_users_list) {
+    override val viewModel: UsersListViewModel by viewModels { factory() }
     private lateinit var binding: FragmentUsersListBinding
     private lateinit var adapter: UsersAdapter
 
@@ -30,7 +30,7 @@ class UsersListFragment: Fragment(R.layout.fragment_users_list) {
         binding = FragmentUsersListBinding.bind(view)
         adapter = UsersAdapter(viewModel)
 
-        viewModel.users.observe(viewLifecycleOwner, Observer {
+        viewModel.users.observe(viewLifecycleOwner) {
             hideAll()
             when (it) {
                 is SuccessResult -> {
@@ -47,20 +47,7 @@ class UsersListFragment: Fragment(R.layout.fragment_users_list) {
                     binding.noUsersTextView.visibility = View.VISIBLE
                 }
             }
-        })
-
-        viewModel.actionShowDetails.observe(viewLifecycleOwner, Observer {
-            it.getValue()?.let { user ->
-                findNavController().navigate(
-                    R.id.action_usersListFragment_to_userDetailsFragment,
-                    bundleOf(UserDetailsFragment.USER_ID to user.id)
-                )
-            }
-        })
-        viewModel.actionShowToast.observe(viewLifecycleOwner, Observer {
-            it.getValue()?.let { messageRes ->
-                Toast.makeText(requireContext(), messageRes, Toast.LENGTH_SHORT).show() }
-        })
+        }
 
         val layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.layoutManager = layoutManager

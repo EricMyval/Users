@@ -1,15 +1,19 @@
 package com.ericmyval.users.screens.users
 
+import androidx.core.os.bundleOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import com.ericmyval.users.R
-import com.ericmyval.users.UserActionListener
 import com.ericmyval.users.model.User
 import com.ericmyval.users.model.UsersListener
 import com.ericmyval.users.model.UsersService
 import com.ericmyval.users.screens.base.BaseViewModel
-import com.ericmyval.users.screens.base.Event
+import com.ericmyval.users.screens.base.ItemNavigate
+import com.ericmyval.users.screens.details.UserDetailsFragment
 import com.ericmyval.users.tasks.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class UsersListViewModel(
     private val usersService: UsersService
@@ -18,12 +22,6 @@ class UsersListViewModel(
     // для работы внутри и подписка для нашего фрагмента
     private val _users = MutableLiveData<Result<List<UserListItem>>>()
     val users: LiveData<Result<List<UserListItem>>> = _users
-
-    // Экшены
-    private val _actionShowDetails = MutableLiveData<Event<User>>()
-    val actionShowDetails: LiveData<Event<User>> = _actionShowDetails
-    private val _actionShowToast = MutableLiveData<Event<Int>>()
-    val actionShowToast: LiveData<Event<Int>> = _actionShowToast
 
     private val userIdsInProgress = mutableSetOf<Long>()
     private var usersResult: Result<List<User>> = EmptyResult()
@@ -42,6 +40,10 @@ class UsersListViewModel(
     init {
         usersService.addListener(listener)
         loadUsers()
+
+        viewModelScope.launch {
+            delay(1000)
+        }
     }
 
     override fun onCleared() {
@@ -58,11 +60,11 @@ class UsersListViewModel(
         usersService.moveUser(user, moveBy)
             .onSuccess {
                 removeProgressFrom(user)
-                _actionShowToast.value = Event(R.string.user_has_been_moved)
+                goShowToast(R.string.user_has_been_moved)
             }
             .onError {
                 removeProgressFrom(user)
-                _actionShowToast.value = Event(R.string.cant_move_user)
+                goShowToast(R.string.cant_move_user)
             }
             .autoCancel()
     }
@@ -74,17 +76,25 @@ class UsersListViewModel(
         usersService.deleteUser(user)
             .onSuccess {
                 removeProgressFrom(user)
-                _actionShowToast.value = Event(R.string.user_has_been_deleted)
+                goShowToast(R.string.user_has_been_deleted)
             }
             .onError {
                 removeProgressFrom(user)
-                _actionShowToast.value = Event(R.string.cant_delete_user)
+                goShowToast(R.string.cant_delete_user)
             }
             .autoCancel()
     }
     override fun onUserDetails(user: User) {
-        _actionShowDetails.value = Event(user)
+        goNavigate(ItemNavigate(
+            R.id.action_usersListFragment_to_userDetailsFragment,
+            bundleOf(UserDetailsFragment.USER_ID to user.id)
+        ))
     }
+
+    override fun onUserFire(user: User) {
+        usersService.fireUser(user)
+    }
+
     fun loadUsers() {
         usersResult = PendingResult()
         usersService.loadUsers()
@@ -93,7 +103,6 @@ class UsersListViewModel(
             }
             .autoCancel()
     }
-
 
     // Прогресс
     private fun addProgressTo(user: User) {

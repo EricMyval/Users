@@ -6,6 +6,7 @@ import com.ericmyval.users.tasks.Task
 import com.github.javafaker.Faker
 import java.util.*
 import java.util.concurrent.Callable
+import kotlin.collections.ArrayList
 
 typealias UsersListener = (users: List<User>) -> Unit
 
@@ -29,7 +30,7 @@ class UsersService {
     })
 
     fun getById(id: Long): Task<UserDetails> = SimpleTask(Callable {
-        Thread.sleep(2000)
+        Thread.sleep(500)
         val user = users.firstOrNull { it.id == id } ?: throw UserNotFoundException()
         return@Callable UserDetails(
             user = user,
@@ -38,7 +39,7 @@ class UsersService {
     })
 
     fun deleteUser(user: User): Task<Unit> = SimpleTask {
-        Thread.sleep(2000)
+        Thread.sleep(500)
         val indexToDelete = users.indexOfFirst { it.id == user.id }
         if (indexToDelete != -1) {
             users.removeAt(indexToDelete)
@@ -46,12 +47,26 @@ class UsersService {
         }
     }
 
+    fun fireUser(user: User) {
+        val index = users.indexOfFirst { it.id == user.id }
+        if (index == -1)
+            return
+
+        val update = users[index].copy( company = "")
+        users = ArrayList(users)
+        users[index] = update
+
+        notifyChanges()
+    }
+
     fun moveUser(user: User, moveBy: Int): Task<Unit> = SimpleTask(Callable {
-        Thread.sleep(2000)
+        Thread.sleep(500)
         val oldIndex = users.indexOfFirst { it.id == user.id }
-        if (oldIndex == -1) return@Callable
+        if (oldIndex == -1)
+            return@Callable
         val newIndex = oldIndex + moveBy
-        if (newIndex < 0 || newIndex >= users.size) return@Callable
+        if (newIndex < 0 || newIndex >= users.size)
+            return@Callable
         Collections.swap(users, oldIndex, newIndex)
         notifyChanges()
     })

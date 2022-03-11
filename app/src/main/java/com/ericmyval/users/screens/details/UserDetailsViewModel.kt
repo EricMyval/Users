@@ -21,12 +21,6 @@ class UserDetailsViewModel(
     private val _state = MutableLiveData<State>()
     val state: LiveData<State> = _state
 
-    // Экшены
-    private val _actionShowToast = MutableLiveData<Event<Int>>()
-    val actionShowToast: LiveData<Event<Int>> = _actionShowToast
-    private val _actionGoBack = MutableLiveData<Event<Unit>>()
-    val actionGoBack: LiveData<Event<Unit>> = _actionGoBack
-
     private val currentState: State get() = state.value!!
 
     init {
@@ -47,10 +41,8 @@ class UserDetailsViewModel(
                 _state.value = currentState.copy(userDetailsResult = SuccessResult(it))
             }
             .onError {
-                // todo
-                //findNavController().popBackStack()
-                _actionShowToast.value = Event(R.string.cant_load_user_details)
-                _actionGoBack.value = Event(Unit)
+                goShowToast(R.string.cant_load_user_details)
+                goBack()
             }
             .autoCancel()
     }
@@ -62,16 +54,15 @@ class UserDetailsViewModel(
         _state.value = currentState.copy(deletingInProgress = true)
         usersService.deleteUser(userDetailsResult.data.user)
             .onSuccess {
-                _actionShowToast.value = Event(R.string.user_has_been_deleted)
-                _actionGoBack.value = Event(Unit)
+                goShowToast(R.string.user_has_been_deleted)
+                goBack()
             }
             .onError {
                 _state.value = currentState.copy(deletingInProgress = false)
-                _actionShowToast.value = Event(R.string.cant_delete_user)
+                goShowToast(R.string.cant_delete_user)
             }
             .autoCancel()
     }
-
 
     data class State(
         val userDetailsResult: Result<UserDetails>,

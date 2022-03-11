@@ -5,18 +5,17 @@ import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.ericmyval.users.R
 import com.ericmyval.users.databinding.FragmentUserDetailsBinding
+import com.ericmyval.users.screens.base.BaseFragment
 import com.ericmyval.users.screens.base.factory
 import com.ericmyval.users.tasks.SuccessResult
 
-class UserDetailsFragment: Fragment(R.layout.fragment_user_details) {
-
+class UserDetailsFragment: BaseFragment(R.layout.fragment_user_details) {
+    override val viewModel: UserDetailsViewModel by viewModels { factory() }
     private lateinit var binding: FragmentUserDetailsBinding
-    private val viewModel: UserDetailsViewModel by viewModels { factory() }
 
     companion object {
         const val USER_ID = "USER_ID"
@@ -28,18 +27,7 @@ class UserDetailsFragment: Fragment(R.layout.fragment_user_details) {
 
         viewModel.loadUser(requireArguments().getLong(USER_ID))
 
-        viewModel.actionShowToast.observe(viewLifecycleOwner, Observer {
-            it.getValue()?.let { messageRes ->
-                Toast.makeText(requireContext(), messageRes, Toast.LENGTH_SHORT).show()
-            }
-        })
-        viewModel.actionGoBack.observe(viewLifecycleOwner, Observer {
-            it.getValue()?.let {
-                findNavController().popBackStack()
-            }
-        })
-
-        viewModel.state.observe(viewLifecycleOwner, Observer {
+        viewModel.state.observe(viewLifecycleOwner) {
             binding.contentContainer.visibility = if (it.showContent) {
                 val userDetails = (it.userDetailsResult as SuccessResult).data
                 binding.userNameTextView.text = userDetails.user.name
@@ -55,7 +43,7 @@ class UserDetailsFragment: Fragment(R.layout.fragment_user_details) {
 
             binding.progressBar.visibility = if (it.showProgress) View.VISIBLE else View.GONE
             binding.deleteButton.isEnabled = it.enableDeleteButton
-        })
+        }
 
         binding.deleteButton.setOnClickListener {
             viewModel.deleteUser()
