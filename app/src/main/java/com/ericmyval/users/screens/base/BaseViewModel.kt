@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.ericmyval.users.tasks.Task
+import kotlinx.coroutines.*
 
 open class BaseViewModel : ViewModel() {
     private val tasks = mutableListOf<Task<*>>()
@@ -16,9 +17,15 @@ open class BaseViewModel : ViewModel() {
     val actionGoBack: LiveData<Event<Unit>> = _actionGoBack
     val actionGoNavigate: LiveData<Event<ItemNavigate>> = _actionGoNavigate
 
+    // Корутины
+    private val coroutineContext = SupervisorJob() + Dispatchers.IO + CoroutineExceptionHandler { _, _ -> }
+    // Настраиваемая область
+    protected val viewModelScope = CoroutineScope(coroutineContext)
+
     override fun onCleared() {
         super.onCleared()
         tasks.forEach { it.cancel() }
+        viewModelScope.cancel()
     }
 
     fun <T> Task<T>.autoCancel() {

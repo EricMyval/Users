@@ -1,30 +1,20 @@
 package com.ericmyval.users.tasks
 
-import android.os.Handler
-import android.os.Looper
 import java.util.concurrent.Callable
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
-
-private val executorService = Executors.newCachedThreadPool()
-private val handler = Handler(Looper.getMainLooper())
 
 class SimpleTask<T>(
-    private val callable: Callable<T>
+    callable: Callable<T>
 ) : Task<T> {
 
-    private val future: Future<*>
     private var result: Result<T> = PendingResult()
 
     init {
-        future = executorService.submit {
-            result = try {
-                SuccessResult(callable.call())
-            } catch (e: Throwable) {
-                ErrorResult(e)
-            }
-            notifyListeners()
+        result = try {
+            SuccessResult(callable.call())
+        } catch (e: Throwable) {
+            ErrorResult(e)
         }
+        notifyListeners()
     }
 
     private var valueCallback: Callback<T>? = null
@@ -44,30 +34,18 @@ class SimpleTask<T>(
 
     override fun cancel() {
         clear()
-        future.cancel(true)
-    }
-
-    override fun await(): T {
-        // гет - вход в основной поток
-        future.get()
-        val result = this.result
-        if (result is SuccessResult) return result.data
-        else throw (result as ErrorResult).error
     }
 
     private fun notifyListeners() {
-        // основной поток
-        handler.post {
-            val result = this.result
-            val callback = this.valueCallback
-            val errorCallback = this.errorCallback
-            if (result is SuccessResult && callback != null) {
-                callback(result.data)
-                clear()
-            } else if (result is ErrorResult && errorCallback != null) {
-                errorCallback.invoke(result.error)
-                clear()
-            }
+        val result = this.result
+        val callback = this.valueCallback
+        val errorCallback = this.errorCallback
+        if (result is SuccessResult && callback != null) {
+            callback(result.data)
+            clear()
+        } else if (result is ErrorResult && errorCallback != null) {
+            errorCallback.invoke(result.error)
+            clear()
         }
     }
 
@@ -76,3 +54,4 @@ class SimpleTask<T>(
         errorCallback = null
     }
 }
+

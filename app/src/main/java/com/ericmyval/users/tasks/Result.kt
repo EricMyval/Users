@@ -7,6 +7,18 @@ sealed class Result<T> {
             return SuccessResult(mapper(data))
         return this as Result<R>
     }
+
+/*  @JvmName("map1") typealias Mapper<Input, Output> = (Input) -> Output
+    fun <R> map(mapper: Mapper<T, R>? = null): Result<R> = when(this) {
+        is EmptyResult -> EmptyResult()
+        is PendingResult -> PendingResult()
+        is ErrorResult -> ErrorResult(this.error)
+        is SuccessResult -> {
+            if (mapper == null) throw IllegalArgumentException("Mapper should not be NULL for success result")
+            SuccessResult(mapper(this.data))
+        }
+    }
+     */
 }
 
 class SuccessResult<T>(

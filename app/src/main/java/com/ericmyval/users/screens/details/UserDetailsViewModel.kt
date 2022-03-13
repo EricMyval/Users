@@ -12,6 +12,7 @@ import com.ericmyval.users.tasks.EmptyResult
 import com.ericmyval.users.tasks.PendingResult
 import com.ericmyval.users.tasks.SuccessResult
 import com.ericmyval.users.tasks.Result
+import kotlinx.coroutines.launch
 
 class UserDetailsViewModel(
     private val usersService: UsersService
@@ -49,19 +50,18 @@ class UserDetailsViewModel(
 
     fun deleteUser() {
         val userDetailsResult = currentState.userDetailsResult
-        if (userDetailsResult !is SuccessResult)
-            return
         _state.value = currentState.copy(deletingInProgress = true)
-        usersService.deleteUser(userDetailsResult.data.user)
-            .onSuccess {
-                goShowToast(R.string.user_has_been_deleted)
-                goBack()
+        if (userDetailsResult is SuccessResult)
+            viewModelScope.launch {
+                try {
+                    usersService.deleteUser(userDetailsResult.data.user)
+                    goShowToast(R.string.user_has_been_deleted)
+                    goBack()
+                } catch (e: Throwable) {
+                    _state.value = currentState.copy(deletingInProgress = false)
+                    goShowToast(R.string.cant_delete_user)
+                }
             }
-            .onError {
-                _state.value = currentState.copy(deletingInProgress = false)
-                goShowToast(R.string.cant_delete_user)
-            }
-            .autoCancel()
     }
 
     data class State(

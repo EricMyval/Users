@@ -1,9 +1,9 @@
 package com.ericmyval.users.model
 
 import com.ericmyval.users.UserNotFoundException
-import com.ericmyval.users.tasks.SimpleTask
-import com.ericmyval.users.tasks.Task
+import com.ericmyval.users.tasks.*
 import com.github.javafaker.Faker
+import kotlinx.coroutines.delay
 import java.util.*
 import java.util.concurrent.Callable
 import kotlin.collections.ArrayList
@@ -15,61 +15,57 @@ class UsersService {
     private var loaded = false
     private val listeners = mutableSetOf<UsersListener>()
 
-    fun loadUsers(): Task<Unit> = SimpleTask<Unit>(Callable {
-        Thread.sleep(2000)
+    suspend fun loadUsers(): List<User> {
         val faker = Faker.instance()
         IMAGES.shuffle()
-        users = (1..100).map { User(
-            id = it.toLong(),
-            name = faker.name().name(),
-            company = faker.company().name(),
-            photo = IMAGES[it % IMAGES.size]
-        ) }.toMutableList()
+        users = (1..300).map {
+            User(
+                id = it.toLong(),
+                name = faker.name().name(),
+                company = faker.company().name(),
+                photo = IMAGES[it % IMAGES.size]
+            )
+        }.toMutableList()
         loaded = true
-        notifyChanges()
-    })
-
+        return users
+    }
     fun getById(id: Long): Task<UserDetails> = SimpleTask(Callable {
-        Thread.sleep(500)
+        Thread.sleep(3000)
         val user = users.firstOrNull { it.id == id } ?: throw UserNotFoundException()
         return@Callable UserDetails(
             user = user,
             details = Faker.instance().lorem().paragraphs(3).joinToString("\n\n")
         )
     })
-
-    fun deleteUser(user: User): Task<Unit> = SimpleTask {
-        Thread.sleep(500)
+    suspend fun deleteUser(user: User): List<User> {
+        delay(2000)
         val indexToDelete = users.indexOfFirst { it.id == user.id }
         if (indexToDelete != -1) {
             users.removeAt(indexToDelete)
-            notifyChanges()
         }
+        return users
     }
-
-    fun fireUser(user: User) {
+    suspend fun fireUser(user: User): List<User> {
         val index = users.indexOfFirst { it.id == user.id }
         if (index == -1)
-            return
-
+            return users
         val update = users[index].copy( company = "")
         users = ArrayList(users)
         users[index] = update
-
-        notifyChanges()
+        return users
     }
-
-    fun moveUser(user: User, moveBy: Int): Task<Unit> = SimpleTask(Callable {
-        Thread.sleep(500)
+    suspend fun moveUser(user: User, moveBy: Int): List<User> {
         val oldIndex = users.indexOfFirst { it.id == user.id }
         if (oldIndex == -1)
-            return@Callable
+            return users
         val newIndex = oldIndex + moveBy
         if (newIndex < 0 || newIndex >= users.size)
-            return@Callable
+            return users
         Collections.swap(users, oldIndex, newIndex)
-        notifyChanges()
-    })
+        return users
+    }
+
+
 
     fun addListener(listener: UsersListener) {
         listeners.add(listener)
