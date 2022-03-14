@@ -11,6 +11,7 @@ class UsersService {
     private var loaded = false
 
     suspend fun loadUsers(): List<User> {
+        delay(1000)
         val faker = Faker.instance()
         IMAGES.shuffle()
         users = (1..50).map {
@@ -26,7 +27,7 @@ class UsersService {
     }
 
     suspend fun getById(id: Long): UserDetails {
-        delay(3000)
+        delay(1000)
         val user = users.firstOrNull { it.id == id } ?: throw UserNotFoundException()
         return UserDetails(
             user = user,
@@ -35,7 +36,7 @@ class UsersService {
     }
 
     suspend fun deleteUser(user: User): List<User> {
-        delay(200)
+        delay(1000)
         val indexToDelete = users.indexOfFirst { it.id == user.id }
         if (indexToDelete != -1) {
             users.removeAt(indexToDelete)
@@ -43,7 +44,7 @@ class UsersService {
         return users
     }
     suspend fun fireUser(user: User): List<User> {
-        delay(200)
+        delay(1000)
         val index = users.indexOfFirst { it.id == user.id }
         if (index == -1)
             return users
@@ -53,7 +54,7 @@ class UsersService {
         return users
     }
     suspend fun moveUser(user: User, moveBy: Int): List<User> {
-        delay(200)
+        delay(1000)
         val oldIndex = users.indexOfFirst { it.id == user.id }
         if (oldIndex == -1)
             return users

@@ -26,18 +26,17 @@ class UsersListViewModel(
     init {
         loadUsers()
     }
+    override fun onResumeView() {
+        notifyUpdates()
+    }
 
     override fun onUserMove(user: User, moveBy: Int) = viewModelScope.launch {
         try {
             addProgressTo(user)
             usersResult = SuccessResult(usersService.moveUser(user, moveBy))
-            launch { Dispatchers.Main
-                goShowToast(R.string.user_has_been_moved)
-            }
+            goShowToast(R.string.user_has_been_moved)
         } catch (e: Throwable) {
-            launch { Dispatchers.Main
-                goShowToast(R.string.cant_move_user)
-            }
+            goShowToast(R.string.cant_move_user)
         } finally {
             removeProgressFrom(user)
         }
@@ -46,13 +45,9 @@ class UsersListViewModel(
         try {
             addProgressTo(user)
             usersResult = SuccessResult(usersService.deleteUser(user))
-            launch { Dispatchers.Main
-                goShowToast(R.string.user_has_been_deleted)
-            }
+            goShowToast(R.string.user_has_been_deleted)
         } catch (e: Throwable) {
-            launch { Dispatchers.Main
-                goShowToast(R.string.cant_delete_user)
-            }
+            goShowToast(R.string.cant_delete_user)
         } finally {
             removeProgressFrom(user)
         }
@@ -61,9 +56,7 @@ class UsersListViewModel(
         try {
             addProgressTo(user)
             usersResult = SuccessResult(usersService.fireUser(user))
-            launch { Dispatchers.Main
-                goShowToast(R.string.user_has_been_fire)
-            }
+            goShowToast(R.string.user_has_been_fire)
         } catch (e: Throwable) {
             goShowToast(R.string.cant_fire_user)
         } finally {
@@ -75,9 +68,7 @@ class UsersListViewModel(
         try {
             usersResult = SuccessResult(usersService.loadUsers())
         } catch (e: Throwable) {
-            launch { Dispatchers.Main
-                goShowToast(R.string.cant_load_users)
-            }
+            goShowToast(R.string.cant_load_users)
         }
     }
     override fun onUserDetails(user: User) {
@@ -105,5 +96,4 @@ class UsersListViewModel(
             users.map { user -> UserListItem(user, isInProgress(user)) }
         })
     }
-
 }

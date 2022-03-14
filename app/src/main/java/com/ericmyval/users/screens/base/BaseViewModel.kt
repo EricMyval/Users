@@ -3,7 +3,7 @@ package com.ericmyval.users.screens.base
 import androidx.lifecycle.*
 import kotlinx.coroutines.*
 
-typealias MutableLiveResult<T> = MutableLiveData<Result<T>>
+//typealias MutableLiveResult<T> = MutableLiveData<Result<T>>
 
 open class BaseViewModel : ViewModel() {
     private val _actionShowToast = MutableLiveData<Event<Int>>()
@@ -27,13 +27,16 @@ open class BaseViewModel : ViewModel() {
     }
 
     fun goShowToast(res: Int) {
-        _actionShowToast.value = Event(res)
+        viewModelScope.launch { Dispatchers.Main
+            _actionShowToast.value = Event(res)
+        }
     }
 
     fun goNavigate(args: ItemNavigate) {
         _actionGoNavigate.value = Event(args)
     }
 
+    /*
     fun <T> into(liveResult: MutableLiveResult<T>, block: suspend () -> T) {
         viewModelScope.launch {
             try {
@@ -44,9 +47,12 @@ open class BaseViewModel : ViewModel() {
             }
         }
     }
+     */
 
     private fun clearScope() {
         viewModelScope.cancel()
     }
+
+    open fun onResumeView() {}
 
 }

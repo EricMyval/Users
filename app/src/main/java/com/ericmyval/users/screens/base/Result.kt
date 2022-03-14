@@ -15,19 +15,17 @@ sealed class Result<T> {
 
 }
 
-sealed class FinalResult<T> : Result<T>()
-
 class PendingResult<T> : Result<T>()
 
 class EmptyResult<T> : Result<T>()
 
 class SuccessResult<T>(
     val data: T
-) : FinalResult<T>()
+) : Result<T>()
 
 class ErrorResult<T>(
     val error: Throwable
-) : FinalResult<T>()
+) : Result<T>()
 
 fun <T> Result<T>?.takeSuccess(): T? {
     return if (this is SuccessResult)

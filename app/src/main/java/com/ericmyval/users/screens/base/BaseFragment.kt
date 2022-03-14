@@ -18,6 +18,11 @@ abstract class BaseFragment(
         observeActionsLoad()
     }
 
+    override fun onResume() {
+        super.onResume()
+        viewModel.onResumeView()
+    }
+
     private fun observeActionsLoad() {
         viewModel.actionGoNavigate.observe(viewLifecycleOwner) {
             it.getValue()?.let { ItemNavigate ->
