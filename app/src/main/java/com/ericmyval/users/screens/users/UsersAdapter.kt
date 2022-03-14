@@ -1,11 +1,9 @@
 package com.ericmyval.users.screens.users
 
-import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
-import android.widget.PopupMenu
 import androidx.appcompat.widget.CustomPopupMenu
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView

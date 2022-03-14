@@ -1,14 +1,8 @@
-package com.ericmyval.users.tasks
+package com.ericmyval.users.screens.base
+
+typealias Mapper<Input, Output> = (Input) -> Output
 
 sealed class Result<T> {
-    @Suppress("UNCHECKED_CAST")
-    fun <R> map(mapper: (T) -> R): Result<R> {
-        if (this is SuccessResult)
-            return SuccessResult(mapper(data))
-        return this as Result<R>
-    }
-
-/*  @JvmName("map1") typealias Mapper<Input, Output> = (Input) -> Output
     fun <R> map(mapper: Mapper<T, R>? = null): Result<R> = when(this) {
         is EmptyResult -> EmptyResult()
         is PendingResult -> PendingResult()
@@ -18,17 +12,26 @@ sealed class Result<T> {
             SuccessResult(mapper(this.data))
         }
     }
-     */
+
 }
 
-class SuccessResult<T>(
-    val data: T
-) : Result<T>()
-
-class ErrorResult<T>(
-    val error: Throwable
-) : Result<T>()
+sealed class FinalResult<T> : Result<T>()
 
 class PendingResult<T> : Result<T>()
 
 class EmptyResult<T> : Result<T>()
+
+class SuccessResult<T>(
+    val data: T
+) : FinalResult<T>()
+
+class ErrorResult<T>(
+    val error: Throwable
+) : FinalResult<T>()
+
+fun <T> Result<T>?.takeSuccess(): T? {
+    return if (this is SuccessResult)
+        this.data
+    else
+        null
+}

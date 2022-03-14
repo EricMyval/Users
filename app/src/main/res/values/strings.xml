@@ -10,6 +10,7 @@
     <string name="no_users">No Users</string>
     <string name="user_has_been_deleted">User has been deleted</string>
     <string name="user_has_been_moved">User has been moved</string>
+    <string name="user_has_been_fire">User has been fire</string>
     <string name="cant_load_user_details">Can\'t load user details</string>
     <string name="cant_load_users">Can\'t load users</string>
     <string name="cant_delete_user">Can\'t delete the user</string>

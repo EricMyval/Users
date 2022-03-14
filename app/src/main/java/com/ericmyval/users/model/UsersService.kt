@@ -1,24 +1,19 @@
 package com.ericmyval.users.model
 
 import com.ericmyval.users.UserNotFoundException
-import com.ericmyval.users.tasks.*
 import com.github.javafaker.Faker
 import kotlinx.coroutines.delay
 import java.util.*
-import java.util.concurrent.Callable
 import kotlin.collections.ArrayList
-
-typealias UsersListener = (users: List<User>) -> Unit
 
 class UsersService {
     private var users: MutableList<User> = mutableListOf()
     private var loaded = false
-    private val listeners = mutableSetOf<UsersListener>()
 
     suspend fun loadUsers(): List<User> {
         val faker = Faker.instance()
         IMAGES.shuffle()
-        users = (1..300).map {
+        users = (1..50).map {
             User(
                 id = it.toLong(),
                 name = faker.name().name(),
@@ -29,16 +24,18 @@ class UsersService {
         loaded = true
         return users
     }
-    fun getById(id: Long): Task<UserDetails> = SimpleTask(Callable {
-        Thread.sleep(3000)
+
+    suspend fun getById(id: Long): UserDetails {
+        delay(3000)
         val user = users.firstOrNull { it.id == id } ?: throw UserNotFoundException()
-        return@Callable UserDetails(
+        return UserDetails(
             user = user,
             details = Faker.instance().lorem().paragraphs(3).joinToString("\n\n")
         )
-    })
+    }
+
     suspend fun deleteUser(user: User): List<User> {
-        delay(2000)
+        delay(200)
         val indexToDelete = users.indexOfFirst { it.id == user.id }
         if (indexToDelete != -1) {
             users.removeAt(indexToDelete)
@@ -46,6 +43,7 @@ class UsersService {
         return users
     }
     suspend fun fireUser(user: User): List<User> {
+        delay(200)
         val index = users.indexOfFirst { it.id == user.id }
         if (index == -1)
             return users
@@ -55,6 +53,7 @@ class UsersService {
         return users
     }
     suspend fun moveUser(user: User, moveBy: Int): List<User> {
+        delay(200)
         val oldIndex = users.indexOfFirst { it.id == user.id }
         if (oldIndex == -1)
             return users
@@ -63,24 +62,6 @@ class UsersService {
             return users
         Collections.swap(users, oldIndex, newIndex)
         return users
-    }
-
-
-
-    fun addListener(listener: UsersListener) {
-        listeners.add(listener)
-        if (loaded)
-            listener.invoke(users)
-    }
-
-    fun removeListener(listener: UsersListener) {
-        listeners.remove(listener)
-    }
-
-    private fun notifyChanges() {
-        if (!loaded)
-            return
-        listeners.forEach { it.invoke(users) }
     }
 
     companion object {

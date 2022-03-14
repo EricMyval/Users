@@ -1,14 +1,11 @@
 package com.ericmyval.users.screens.base
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import com.ericmyval.users.tasks.Task
+import androidx.lifecycle.*
 import kotlinx.coroutines.*
 
-open class BaseViewModel : ViewModel() {
-    private val tasks = mutableListOf<Task<*>>()
+typealias MutableLiveResult<T> = MutableLiveData<Result<T>>
 
+open class BaseViewModel : ViewModel() {
     private val _actionShowToast = MutableLiveData<Event<Int>>()
     private val _actionGoBack = MutableLiveData<Event<Unit>>()
     private val _actionGoNavigate = MutableLiveData<Event<ItemNavigate>>()
@@ -17,19 +14,12 @@ open class BaseViewModel : ViewModel() {
     val actionGoBack: LiveData<Event<Unit>> = _actionGoBack
     val actionGoNavigate: LiveData<Event<ItemNavigate>> = _actionGoNavigate
 
-    // Корутины
-    private val coroutineContext = SupervisorJob() + Dispatchers.IO + CoroutineExceptionHandler { _, _ -> }
-    // Настраиваемая область
+    private val coroutineContext = SupervisorJob() + Dispatchers.Main.immediate + CoroutineExceptionHandler { _, _ -> }
     protected val viewModelScope = CoroutineScope(coroutineContext)
 
     override fun onCleared() {
         super.onCleared()
-        tasks.forEach { it.cancel() }
-        viewModelScope.cancel()
-    }
-
-    fun <T> Task<T>.autoCancel() {
-        tasks.add(this)
+        clearScope()
     }
 
     fun goBack() {
@@ -43,4 +33,20 @@ open class BaseViewModel : ViewModel() {
     fun goNavigate(args: ItemNavigate) {
         _actionGoNavigate.value = Event(args)
     }
+
+    fun <T> into(liveResult: MutableLiveResult<T>, block: suspend () -> T) {
+        viewModelScope.launch {
+            try {
+                liveResult.postValue(SuccessResult(block()))
+            } catch (e: Throwable) {
+                if (e !is CancellationException)
+                    liveResult.postValue(ErrorResult(e))
+            }
+        }
+    }
+
+    private fun clearScope() {
+        viewModelScope.cancel()
+    }
+
 }

@@ -2,23 +2,16 @@ package com.ericmyval.users.screens.users
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
-import androidx.core.os.bundleOf
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.ericmyval.users.R
 import com.ericmyval.users.databinding.FragmentUsersListBinding
 import com.ericmyval.users.screens.base.BaseFragment
 import com.ericmyval.users.screens.base.factory
-import com.ericmyval.users.screens.details.UserDetailsFragment
-
-import com.ericmyval.users.tasks.EmptyResult
-import com.ericmyval.users.tasks.ErrorResult
-import com.ericmyval.users.tasks.PendingResult
-import com.ericmyval.users.tasks.SuccessResult
+import com.ericmyval.users.screens.base.EmptyResult
+import com.ericmyval.users.screens.base.ErrorResult
+import com.ericmyval.users.screens.base.PendingResult
+import com.ericmyval.users.screens.base.SuccessResult
 
 class UsersListFragment: BaseFragment(R.layout.fragment_users_list) {
     override val viewModel: UsersListViewModel by viewModels { factory() }

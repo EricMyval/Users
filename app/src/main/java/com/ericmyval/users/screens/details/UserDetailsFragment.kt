@@ -2,16 +2,13 @@ package com.ericmyval.users.screens.details
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.ericmyval.users.R
 import com.ericmyval.users.databinding.FragmentUserDetailsBinding
 import com.ericmyval.users.screens.base.BaseFragment
 import com.ericmyval.users.screens.base.factory
-import com.ericmyval.users.tasks.SuccessResult
+import com.ericmyval.users.screens.base.SuccessResult
 
 class UserDetailsFragment: BaseFragment(R.layout.fragment_user_details) {
     override val viewModel: UserDetailsViewModel by viewModels { factory() }
