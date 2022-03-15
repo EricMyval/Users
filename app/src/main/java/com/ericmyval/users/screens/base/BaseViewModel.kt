@@ -14,7 +14,7 @@ open class BaseViewModel : ViewModel() {
     val actionGoBack: LiveData<Event<Unit>> = _actionGoBack
     val actionGoNavigate: LiveData<Event<ItemNavigate>> = _actionGoNavigate
 
-    private val coroutineContext = SupervisorJob() + Dispatchers.Main.immediate + CoroutineExceptionHandler { _, _ -> }
+    private val coroutineContext = SupervisorJob() + Dispatchers.Main.immediate //+ CoroutineExceptionHandler { _, _ -> }
     protected val viewModelScope = CoroutineScope(coroutineContext)
 
     override fun onCleared() {
@@ -23,6 +23,7 @@ open class BaseViewModel : ViewModel() {
     }
 
     fun goBack() {
+        clearScope()
         _actionGoBack.value = Event(Unit)
     }
 
@@ -49,10 +50,21 @@ open class BaseViewModel : ViewModel() {
     }
      */
 
+    fun <T> into(idMesSuccess: Int, idMesError: Int, block: suspend () -> T) {
+        viewModelScope.launch {
+            try {
+                block()
+                if (idMesSuccess != -1)
+                    goShowToast(idMesSuccess)
+            } catch (e: Exception) {
+                if (e !is CancellationException && idMesError != -1)
+                    goShowToast(idMesError)
+            }
+        }
+    }
+
     private fun clearScope() {
         viewModelScope.cancel()
     }
-
-    open fun onResumeView() {}
 
 }

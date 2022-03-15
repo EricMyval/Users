@@ -17,60 +17,35 @@ class UsersListViewModel(
     private val _users = MutableLiveData<Result<List<UserListItem>>>()
     val users: LiveData<Result<List<UserListItem>>> = _users
     private val userIdsInProgress = mutableSetOf<Long>()
-    private var usersResult: Result<List<User>> = EmptyResult()
-        set(value) {
-            field = value
-            notifyUpdates()
-        }
+    private var usersResult: Result<List<User>> = PendingResult()
 
     init {
+        viewModelScope.launch {
+            usersService.listenUsers().collect {
+                usersResult = it
+                notifyUpdates()
+            }
+        }
         loadUsers()
     }
-    override fun onResumeView() {
-        notifyUpdates()
-    }
 
-    override fun onUserMove(user: User, moveBy: Int) = viewModelScope.launch {
-        try {
-            addProgressTo(user)
-            usersResult = SuccessResult(usersService.moveUser(user, moveBy))
-            goShowToast(R.string.user_has_been_moved)
-        } catch (e: Throwable) {
-            goShowToast(R.string.cant_move_user)
-        } finally {
-            removeProgressFrom(user)
+    override fun onUserMove(user: User, moveBy: Int) {
+        onUserProgressAction(user, R.string.user_has_been_moved, R.string.cant_move_user) {
+            usersService.moveUser(user, moveBy)
         }
     }
-    override fun onUserDelete(user: User) = viewModelScope.launch {
-        try {
-            addProgressTo(user)
-            usersResult = SuccessResult(usersService.deleteUser(user))
-            goShowToast(R.string.user_has_been_deleted)
-        } catch (e: Throwable) {
-            goShowToast(R.string.cant_delete_user)
-        } finally {
-            removeProgressFrom(user)
+    override fun onUserDelete(user: User) {
+        onUserProgressAction(user, R.string.user_has_been_deleted, R.string.cant_delete_user) {
+            usersService.deleteUser(user)
         }
     }
-    override fun onUserFire(user: User) = viewModelScope.launch {
-        try {
-            addProgressTo(user)
-            usersResult = SuccessResult(usersService.fireUser(user))
-            goShowToast(R.string.user_has_been_fire)
-        } catch (e: Throwable) {
-            goShowToast(R.string.cant_fire_user)
-        } finally {
-            removeProgressFrom(user)
+    override fun onUserFire(user: User) {
+        onUserProgressAction(user, R.string.user_has_been_fire, R.string.cant_fire_user) {
+            usersService.fireUser(user)
         }
     }
-    //private fun load() = into(_usersResult) { usersService.loadUsers() }
-    private fun loadUsers() = viewModelScope.launch {
-        try {
-            usersResult = SuccessResult(usersService.loadUsers())
-        } catch (e: Throwable) {
-            goShowToast(R.string.cant_load_users)
-        }
-    }
+    private fun loadUsers() = into(-1, R.string.cant_load_users) { usersService.loadUsers() }
+
     override fun onUserDetails(user: User) {
         goNavigate(ItemNavigate(
             R.id.action_usersListFragment_to_userDetailsFragment,
@@ -89,6 +64,21 @@ class UsersListViewModel(
     }
     private fun isInProgress(user: User): Boolean {
         return userIdsInProgress.contains(user.id)
+    }
+    private fun <T> onUserProgressAction(user: User, idMesSuccess: Int, idMesError: Int, block: suspend () -> T) {
+        viewModelScope.launch {
+            try {
+                addProgressTo(user)
+                block()
+                if (idMesSuccess != -1)
+                    goShowToast(idMesSuccess)
+            } catch (e: Exception) {
+                if (e !is CancellationException && idMesError != -1)
+                    goShowToast(idMesError)
+            } finally {
+                removeProgressFrom(user)
+            }
+        }
     }
 
     private fun notifyUpdates() {

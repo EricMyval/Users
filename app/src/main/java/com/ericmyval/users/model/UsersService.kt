@@ -1,16 +1,41 @@
 package com.ericmyval.users.model
 
 import com.ericmyval.users.UserNotFoundException
+import com.ericmyval.users.model.coroutines.IODispatcher
 import com.github.javafaker.Faker
+import com.ericmyval.users.screens.base.Result
+import com.ericmyval.users.screens.base.SuccessResult
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.withContext
 import java.util.*
 import kotlin.collections.ArrayList
 
-class UsersService {
-    private var users: MutableList<User> = mutableListOf()
-    private var loaded = false
+typealias UsersListener = (users: List<User>) -> Unit
 
-    suspend fun loadUsers(): List<User> {
+class UsersService(
+    private val ioDispatcher: IODispatcher
+) {
+    private var users: MutableList<User> = mutableListOf()
+    private val listeners = mutableSetOf<UsersListener>()
+
+    fun listenUsers(): Flow<Result<List<User>>> = callbackFlow {
+        val listener: UsersListener = {
+            trySend(SuccessResult(it))
+        }
+        listeners.add(listener)
+        awaitClose {
+            listeners.remove(listener)
+        }
+    }.buffer(Channel.CONFLATED) // последний реультат из буфера
+
+    private fun notifyChanges() {
+        listeners.forEach { it.invoke(users) }
+    }
+
+    suspend fun loadUsers() = withContext(ioDispatcher.value) {
         delay(1000)
         val faker = Faker.instance()
         IMAGES.shuffle()
@@ -22,48 +47,56 @@ class UsersService {
                 photo = IMAGES[it % IMAGES.size]
             )
         }.toMutableList()
-        loaded = true
-        return users
+        notifyChanges()
     }
 
-    suspend fun getById(id: Long): UserDetails {
+    suspend fun getById(id: Long): UserDetails = withContext(ioDispatcher.value) {
         delay(1000)
         val user = users.firstOrNull { it.id == id } ?: throw UserNotFoundException()
-        return UserDetails(
+        return@withContext UserDetails(
             user = user,
             details = Faker.instance().lorem().paragraphs(3).joinToString("\n\n")
         )
     }
 
-    suspend fun deleteUser(user: User): List<User> {
+    suspend fun deleteUser(user: User) = withContext(ioDispatcher.value) {
         delay(1000)
         val indexToDelete = users.indexOfFirst { it.id == user.id }
         if (indexToDelete != -1) {
             users.removeAt(indexToDelete)
+            notifyChanges()
         }
-        return users
     }
-    suspend fun fireUser(user: User): List<User> {
+    suspend fun fireUser(user: User) = withContext(ioDispatcher.value) {
         delay(1000)
         val index = users.indexOfFirst { it.id == user.id }
-        if (index == -1)
-            return users
-        val update = users[index].copy( company = "")
-        users = ArrayList(users)
-        users[index] = update
-        return users
+        if (index != -1) {
+            val update = users[index].copy(company = "")
+            users = ArrayList(users)
+            users[index] = update
+            notifyChanges()
+        }
     }
-    suspend fun moveUser(user: User, moveBy: Int): List<User> {
+    suspend fun moveUser(user: User, moveBy: Int) = withContext(ioDispatcher.value) {
         delay(1000)
         val oldIndex = users.indexOfFirst { it.id == user.id }
         if (oldIndex == -1)
-            return users
+            return@withContext
         val newIndex = oldIndex + moveBy
         if (newIndex < 0 || newIndex >= users.size)
-            return users
+            return@withContext
         Collections.swap(users, oldIndex, newIndex)
-        return users
+        notifyChanges()
     }
+
+    fun setCurrentColor(color: Int): Flow<Int> = flow {
+        var progress = 0
+        while (progress < 100) {
+            progress += 1
+            delay(10)
+            emit(progress)
+        }
+    }.flowOn(ioDispatcher.value)
 
     companion object {
         private val IMAGES = mutableListOf(

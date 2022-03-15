@@ -1,5 +1,8 @@
 package com.ericmyval.users.screens.base
 
+import com.ericmyval.users.model.User
+import kotlinx.coroutines.launch
+
 typealias Mapper<Input, Output> = (Input) -> Output
 
 sealed class Result<T> {

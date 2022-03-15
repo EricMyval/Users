@@ -16,8 +16,6 @@ import kotlinx.coroutines.launch
 class UserDetailsViewModel(
     private val usersService: UsersService
 ): BaseViewModel() {
-
-    // для работы внутри и подписка для нашего фрагмента
     private val _state = MutableLiveData<State>()
     val state: LiveData<State> = _state
 
@@ -39,9 +37,7 @@ class UserDetailsViewModel(
                 _state.value = currentState.copy(userDetailsResult = SuccessResult(usersService.getById(userId)))
             } catch (e: Throwable) {
                 _state.value = currentState.copy(deletingInProgress = false)
-                launch { Dispatchers.Main
-                    goShowToast(R.string.cant_load_user_details)
-                }
+                goShowToast(R.string.cant_load_user_details)
                 goBack()
             }
         }
@@ -54,15 +50,11 @@ class UserDetailsViewModel(
             viewModelScope.launch {
                 try {
                     usersService.deleteUser(userDetailsResult.data.user)
-                    launch { Dispatchers.Main
-                        goShowToast(R.string.user_has_been_deleted)
-                    }
+                    goShowToast(R.string.user_has_been_deleted)
                     goBack()
                 } catch (e: Throwable) {
                     _state.value = currentState.copy(deletingInProgress = false)
-                    launch { Dispatchers.Main
-                        goShowToast(R.string.cant_delete_user)
-                    }
+                    goShowToast(R.string.cant_delete_user)
                 }
             }
     }
