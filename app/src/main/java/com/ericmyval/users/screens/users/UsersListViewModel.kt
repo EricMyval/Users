@@ -1,21 +1,22 @@
 package com.ericmyval.users.screens.users
 
 import androidx.core.os.bundleOf
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import com.ericmyval.users.R
 import com.ericmyval.users.model.User
 import com.ericmyval.users.model.UsersService
 import com.ericmyval.users.screens.base.*
 import com.ericmyval.users.screens.details.UserDetailsFragment
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 class UsersListViewModel(
     private val usersService: UsersService
 ): BaseViewModel(), UserActionListener {
 
-    private val _users = MutableLiveData<Result<List<UserListItem>>>()
-    val users: LiveData<Result<List<UserListItem>>> = _users
+    private val _users = MutableStateFlow<Result<List<UserListItem>>>(PendingResult())
+    val users: StateFlow<Result<List<UserListItem>>> = _users
+
     private val userIdsInProgress = mutableSetOf<Long>()
     private var usersResult: Result<List<User>> = PendingResult()
 
@@ -45,7 +46,6 @@ class UsersListViewModel(
         }
     }
     private fun loadUsers() = into(-1, R.string.cant_load_users) { usersService.loadUsers() }
-
     override fun onUserDetails(user: User) {
         goNavigate(ItemNavigate(
             R.id.action_usersListFragment_to_userDetailsFragment,
@@ -82,8 +82,6 @@ class UsersListViewModel(
     }
 
     private fun notifyUpdates() {
-        _users.postValue(usersResult.map { users ->
-            users.map { user -> UserListItem(user, isInProgress(user)) }
-        })
+        _users.value = usersResult.map { users -> users.map { user -> UserListItem(user, isInProgress(user)) } }
     }
 }

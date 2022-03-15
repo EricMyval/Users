@@ -1,7 +1,5 @@
 package com.ericmyval.users.screens.details
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import com.ericmyval.users.R
 import com.ericmyval.users.model.UserDetails
 import com.ericmyval.users.model.UsersService
@@ -10,27 +8,22 @@ import com.ericmyval.users.screens.base.EmptyResult
 import com.ericmyval.users.screens.base.PendingResult
 import com.ericmyval.users.screens.base.SuccessResult
 import com.ericmyval.users.screens.base.Result
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class UserDetailsViewModel(
     private val usersService: UsersService
 ): BaseViewModel() {
-    private val _state = MutableLiveData<State>()
-    val state: LiveData<State> = _state
 
-    private val currentState: State get() = state.value!!
-
-    init {
-        _state.value = State(
-            userDetailsResult = EmptyResult(),
-            deletingInProgress = false
-        )
-    }
+    private val _state = MutableStateFlow(State(
+        userDetailsResult = EmptyResult(),
+        deletingInProgress = false
+    ))
+    val state: StateFlow<State> = _state
+    private val currentState: State get() = state.value
 
     fun loadUser(userId: Long) {
-        if (currentState.userDetailsResult !is EmptyResult)
-            return
         _state.value = currentState.copy(userDetailsResult = PendingResult())
         viewModelScope.launch {
             try {
