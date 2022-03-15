@@ -3,8 +3,6 @@ package com.ericmyval.users.screens.base
 import androidx.lifecycle.*
 import kotlinx.coroutines.*
 
-//typealias MutableLiveResult<T> = MutableLiveData<Result<T>>
-
 open class BaseViewModel : ViewModel() {
     private val _actionShowToast = MutableLiveData<Event<Int>>()
     private val _actionGoBack = MutableLiveData<Event<Unit>>()

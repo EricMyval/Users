@@ -35,11 +35,13 @@ class UsersService(
         listeners.forEach { it.invoke(users) }
     }
 
-    suspend fun loadUsers() = withContext(ioDispatcher.value) {
-        delay(1000)
+    fun loadUsers(): Flow<Int> = flow {
+        var progress = 0
         val faker = Faker.instance()
         IMAGES.shuffle()
-        users = (1..50).map {
+        users = (1..100).map {
+            progress += 1
+            emit(progress)
             User(
                 id = it.toLong(),
                 name = faker.name().name(),
@@ -48,7 +50,8 @@ class UsersService(
             )
         }.toMutableList()
         notifyChanges()
-    }
+    }.flowOn(ioDispatcher.value)
+
 
     suspend fun getById(id: Long): UserDetails = withContext(ioDispatcher.value) {
         delay(1000)
@@ -88,15 +91,6 @@ class UsersService(
         Collections.swap(users, oldIndex, newIndex)
         notifyChanges()
     }
-
-    fun setCurrentColor(color: Int): Flow<Int> = flow {
-        var progress = 0
-        while (progress < 100) {
-            progress += 1
-            delay(10)
-            emit(progress)
-        }
-    }.flowOn(ioDispatcher.value)
 
     companion object {
         private val IMAGES = mutableListOf(

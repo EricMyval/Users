@@ -30,12 +30,12 @@ class UsersListFragment: BaseFragment(R.layout.fragment_users_list) {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.users.collect {
+                viewModel.viewState.collect {
                     hideAll()
                     when (it) {
                         is SuccessResult -> {
                             binding.recyclerView.visibility = View.VISIBLE
-                            adapter.users = it.data
+                            adapter.users = it.data.usersList
                         }
                         is ErrorResult -> {
                             binding.tryAgainContainer.visibility = View.VISIBLE
