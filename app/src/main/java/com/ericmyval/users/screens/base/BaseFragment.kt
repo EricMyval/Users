@@ -5,8 +5,13 @@ import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.ericmyval.users.R
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 
 abstract class BaseFragment(
     idRes: Int
@@ -37,5 +42,14 @@ abstract class BaseFragment(
             }
         }
     }
+}
 
+fun <T> BaseFragment.collectFlow(flow: Flow<T>, onCollect: (T) -> Unit) {
+    viewLifecycleOwner.lifecycleScope.launch {
+        viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            flow.collect {
+                onCollect(it)
+            }
+        }
+    }
 }

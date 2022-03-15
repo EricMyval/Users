@@ -36,12 +36,12 @@ class UsersService(
     }
 
     fun loadUsers(): Flow<Int> = flow {
-        var progress = 0
         val faker = Faker.instance()
+        val count = 1000
         IMAGES.shuffle()
-        users = (1..100).map {
-            progress += 1
-            emit(progress)
+        users = (1..count).map {
+            val percent: Double = (100 / count.toDouble() * it)
+            emit(percent.toInt())
             User(
                 id = it.toLong(),
                 name = faker.name().name(),

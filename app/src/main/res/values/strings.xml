@@ -20,4 +20,7 @@
 
     <string name="fire">Fire</string>
     <string name="unemployed">[Unemployed]</string>
+
+    <string name="percentage_value">%1$d%%</string>
+    <string name="please_wait">Please wait…</string>
 </resources>

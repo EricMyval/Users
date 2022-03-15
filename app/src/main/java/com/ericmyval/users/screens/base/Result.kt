@@ -1,14 +1,11 @@
 package com.ericmyval.users.screens.base
 
-import com.ericmyval.users.model.User
-import kotlinx.coroutines.launch
-
 typealias Mapper<Input, Output> = (Input) -> Output
 
 sealed class Result<T> {
     fun <R> map(mapper: Mapper<T, R>? = null): Result<R> = when(this) {
         is EmptyResult -> EmptyResult()
-        is PendingResult -> PendingResult()
+        is PendingResult -> PendingResult(this.percent)
         is ErrorResult -> ErrorResult(this.error)
         is SuccessResult -> {
             if (mapper == null) throw IllegalArgumentException("Mapper should not be NULL for success result")
@@ -18,7 +15,13 @@ sealed class Result<T> {
 
 }
 
-class PendingResult<T> : Result<T>()
+class PendingResult<T>(
+    val percent: Int
+) : Result<T>() {
+    companion object {
+        const val START = 0
+    }
+}
 
 class EmptyResult<T> : Result<T>()
 

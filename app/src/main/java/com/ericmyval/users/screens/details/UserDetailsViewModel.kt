@@ -16,15 +16,15 @@ class UserDetailsViewModel(
     private val usersService: UsersService
 ): BaseViewModel() {
 
-    private val _state = MutableStateFlow(State(
+    private val _state = MutableStateFlow(ViewState(
         userDetailsResult = EmptyResult(),
         deletingInProgress = false
     ))
-    val state: StateFlow<State> = _state
-    private val currentState: State get() = state.value
+    val viewState: StateFlow<ViewState> = _state
+    private val currentState: ViewState get() = viewState.value
 
     fun loadUser(userId: Long) {
-        _state.value = currentState.copy(userDetailsResult = PendingResult())
+        _state.value = currentState.copy(userDetailsResult = PendingResult(PendingResult.START))
         viewModelScope.launch {
             try {
                 _state.value = currentState.copy(userDetailsResult = SuccessResult(usersService.getById(userId)))
@@ -52,7 +52,7 @@ class UserDetailsViewModel(
             }
     }
 
-    data class State(
+    data class ViewState(
         val userDetailsResult: Result<UserDetails>,
         private val deletingInProgress: Boolean
     ) {

@@ -30,7 +30,7 @@ class UserDetailsFragment: BaseFragment(R.layout.fragment_user_details) {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.state.collect {
+                viewModel.viewState.collect {
                     binding.contentContainer.visibility = if (it.showContent) {
                         val userDetails = (it.userDetailsResult as SuccessResult).data
                         binding.userNameTextView.text = userDetails.user.name

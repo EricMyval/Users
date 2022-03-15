@@ -1,6 +1,5 @@
 package com.ericmyval.users.screens.users
 
-import android.view.View
 import androidx.core.os.bundleOf
 import com.ericmyval.users.R
 import com.ericmyval.users.model.*
@@ -13,33 +12,11 @@ class UsersListViewModel(
     private val usersService: UsersService
 ): BaseViewModel(), UserActionListener {
 
-    private val _users = MutableStateFlow<Result<List<UserListItem>>>(PendingResult())
-    private val _loadProgress = MutableStateFlow<Progress>(EmptyProgress)
-
-    val viewState: Flow<Result<ViewState>> = combine(
-        _users,
-        _loadProgress,
-        ::mergeSources
-    )
-
-    data class ViewState(
-        val usersList: List<UserListItem>,
-        val showProgress: Boolean,
-        val saveProgressPercentage: Int,
-    )
-
-    private fun mergeSources(usersList: Result<List<UserListItem>>, loadProgress: Progress): Result<ViewState> {
-        return usersList.map {
-            ViewState(
-                usersList = it,
-                showProgress = loadProgress.isInProgress(),
-                saveProgressPercentage = loadProgress.getPercentage()
-            )
-        }
-    }
+    private val _users = MutableStateFlow<Result<List<UserListItem>>>(PendingResult(PendingResult.START))
 
     private val userIdsInProgress = mutableSetOf<Long>()
-    private var usersResult: Result<List<User>> = PendingResult()
+    private var usersResult: Result<List<User>> = PendingResult(PendingResult.START)
+    val users: StateFlow<Result<List<UserListItem>>> = _users
 
     init {
         viewModelScope.launch {
@@ -66,7 +43,11 @@ class UsersListViewModel(
             usersService.fireUser(user)
         }
     }
-    private fun loadUsers() = into(-1, R.string.cant_load_users) { usersService.loadUsers().collect() }
+    private fun loadUsers() = into(-1, R.string.cant_load_users) {
+        usersService.loadUsers().collect {
+            _users.value = PendingResult(it)
+        }
+    }
     override fun onUserDetails(user: User) {
         goNavigate(ItemNavigate(
             R.id.action_usersListFragment_to_userDetailsFragment,
