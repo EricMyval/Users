@@ -2,6 +2,6 @@
 
 MVVM
 
-Binding, LiveData, Navigation Graph, Coroutines
+Binding, LiveData, Navigation Graph, Coroutines, Flow
 
 Custom Popup Menu, DiffUtil, RecyclerView, Animation
